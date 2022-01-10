@@ -7,8 +7,10 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import raul.imashev.shoppinglist.R
 import raul.imashev.shoppinglist.domain.ShopItem
+import java.lang.RuntimeException
 
 class ShopListAdapter : RecyclerView.Adapter<ShopListAdapter.ShopItemViewHolder>() {
+
 
     var shopList = listOf<ShopItem>()
         set(value) {
@@ -17,11 +19,12 @@ class ShopListAdapter : RecyclerView.Adapter<ShopListAdapter.ShopItemViewHolder>
         }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ShopItemViewHolder {
-        val view = LayoutInflater.from(parent.context).inflate(
-            R.layout.item_shop_enabled,
-            parent,
-            false
-        )
+        val layout = when (viewType) {
+            IS_ENABLED_CONST -> R.layout.item_shop_enabled
+            IS_DISABLED_CONST -> R.layout.item_shop_disabled
+            else -> throw RuntimeException("Unknown viewType: $viewType")
+        }
+        val view = LayoutInflater.from(parent.context).inflate(layout, parent, false)
         return ShopItemViewHolder(view)
     }
 
@@ -31,6 +34,16 @@ class ShopListAdapter : RecyclerView.Adapter<ShopListAdapter.ShopItemViewHolder>
         holder.tvCount.text = shopItem.count.toString()
     }
 
+    //прорисовка разных view, в зависимости от условия
+    override fun getItemViewType(position: Int): Int {
+        val shopItem = shopList[position]
+        return if (shopItem.enabled) {
+            IS_ENABLED_CONST
+        } else {
+            IS_DISABLED_CONST
+        }
+    }
+
     override fun getItemCount(): Int = shopList.size
 
     class ShopItemViewHolder(view: View) : RecyclerView.ViewHolder(view) {
@@ -38,4 +51,8 @@ class ShopListAdapter : RecyclerView.Adapter<ShopListAdapter.ShopItemViewHolder>
         val tvCount = view.findViewById<TextView>(R.id.tv_count)
     }
 
+    companion object {
+        private const val IS_ENABLED_CONST = 0
+        private const val IS_DISABLED_CONST = 1
+    }
 }
